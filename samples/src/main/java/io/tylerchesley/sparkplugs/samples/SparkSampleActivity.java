@@ -16,20 +16,20 @@
 
 package io.tylerchesley.sparkplugs.samples;
 
-import android.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import io.tylerchesley.android.sparkplugs.SparkPlugActivity;
+import io.tylerchesley.android.sparkplugs.SparkPlugFragmentActivity;
 import io.tylerchesley.android.sparkplugs.plugins.ActivityLogPlugin;
-import io.tylerchesley.android.sparkplugs.plugins.SingleFragmentPlugin;
+import io.tylerchesley.android.sparkplugs.plugins.SupportFragmentPlugin;
 
 /**
  * @author Tyler Chesley
  */
-public class SparkSampleActivity extends SparkPlugActivity {
+public class SparkSampleActivity extends SparkPlugFragmentActivity {
 
 //------------------------------------------
 //  Constants
@@ -44,7 +44,7 @@ public class SparkSampleActivity extends SparkPlugActivity {
     @Override
     protected void initializePlugins() {
         addActivityPlugin(new ActivityLogPlugin(TAG));
-        addActivityPlugin(new SingleFragmentPlugin<SampleFragment>(SampleFragment.class));
+        addActivityPlugin(SupportFragmentPlugin.newPlugin(SampleFragment.class).build());
     }
 
 //------------------------------------------

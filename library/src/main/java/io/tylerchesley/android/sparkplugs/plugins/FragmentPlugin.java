@@ -19,13 +19,13 @@ package io.tylerchesley.android.sparkplugs.plugins;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 
 import io.tylerchesley.android.sparkplugs.R;
 import io.tylerchesley.android.sparkplugs.SparkPlugBase;
+import io.tylerchesley.android.sparkplugs.util.FragmentUtils;
 
-public class SingleFragmentPlugin<F extends Fragment> extends SparkPlugBase {
+public class FragmentPlugin<F extends Fragment> extends SparkPlugBase {
 
 //------------------------------------------
 //  Constants
@@ -33,51 +33,13 @@ public class SingleFragmentPlugin<F extends Fragment> extends SparkPlugBase {
 
     public static final int INVALID_LAYOUT_RESOURCE_ID = -1;
     public static final String SINGLE_FRAGMENT_TAG = "single_fragment";
-    public static final String ARG_URI = "_uri";
 
 //------------------------------------------
 //  Static Methods
 //------------------------------------------
 
-    /**
-     * Converts an intent into a {@link Bundle} suitable for use as fragment arguments.
-     */
-    public static Bundle intentToFragmentArguments(Intent intent) {
-        Bundle arguments = new Bundle();
-        if (intent == null) {
-            return arguments;
-        }
-
-        final Uri data = intent.getData();
-        if (data != null) {
-            arguments.putParcelable(ARG_URI, data);
-        }
-
-        final Bundle extras = intent.getExtras();
-        if (extras != null) {
-            arguments.putAll(intent.getExtras());
-        }
-
-        return arguments;
-    }
-
-    /**
-     * Converts a fragment arguments bundle into an intent.
-     */
-    public static Intent fragmentArgumentsToIntent(Bundle arguments) {
-        Intent intent = new Intent();
-        if (arguments == null) {
-            return intent;
-        }
-
-        final Uri data = arguments.getParcelable(ARG_URI);
-        if (data != null) {
-            intent.setData(data);
-        }
-
-        intent.putExtras(arguments);
-        intent.removeExtra(ARG_URI);
-        return intent;
+    public static <B extends Fragment> Builder<B> newPlugin(Class<B> fragmentClass) {
+        return new Builder<B>(fragmentClass);
     }
 
 //------------------------------------------
@@ -96,13 +58,12 @@ public class SingleFragmentPlugin<F extends Fragment> extends SparkPlugBase {
 //  Constructor
 //------------------------------------------
 
-    public SingleFragmentPlugin(Class<F> fragmentClass) {
-        this(fragmentClass, null, SINGLE_FRAGMENT_TAG,
-                R.layout.activity_single_fragment_plugin, R.id.single_fragment_container);
-    }
+    public FragmentPlugin(Class<F> fragmentClass, Bundle arguments, String tag,
+                          int layoutResourceId, int containerId) {
+        if (fragmentClass == null) {
+            throw new NullPointerException("Fragment class may not be null.");
+        }
 
-    public SingleFragmentPlugin(Class<F> fragmentClass, Bundle arguments, String tag,
-                                int layoutResourceId, int containerId) {
         mFragmentClass = fragmentClass;
         mArguments = arguments;
         mTag = tag;
@@ -138,6 +99,59 @@ public class SingleFragmentPlugin<F extends Fragment> extends SparkPlugBase {
 
     public F getFragment() {
         return mFragment;
+    }
+
+//------------------------------------------
+//  Inner Classes
+//------------------------------------------
+
+    public static final class Builder<F extends Fragment> {
+
+        private final Class<F> mFragmentClass;
+
+        private Bundle mArguments;
+        private String mTag;
+        private int mLayoutResourceId = R.layout.activity_single_fragment_plugin;
+        private int mContainerId = R.id.single_fragment_container;
+
+        Builder(Class<F> fragmentClass) {
+            mFragmentClass = fragmentClass;
+        }
+
+        public Builder<F> arguments(Bundle arguments) {
+            mArguments = arguments;
+            return this;
+        }
+
+        public Builder arguments(Intent intent) {
+            return arguments(FragmentUtils.intentToFragmentArguments(intent));
+        }
+
+        public Builder<F> tag(String tag) {
+            mTag = tag;
+            return this;
+        }
+
+        public Builder<F> layoutResourceId(int layoutResourceId) {
+            mLayoutResourceId = layoutResourceId;
+            return this;
+        }
+
+        public Builder<F> containerId(int containerId) {
+            mContainerId = containerId;
+            return this;
+        }
+
+        public Builder<F> layoutAlreadySet() {
+            mLayoutResourceId = INVALID_LAYOUT_RESOURCE_ID;
+            return this;
+        }
+
+        public FragmentPlugin<F> build() {
+            return new FragmentPlugin<F>(mFragmentClass, mArguments, mTag,
+                    mLayoutResourceId, mContainerId);
+        }
+
     }
 
 }
