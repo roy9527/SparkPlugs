@@ -24,7 +24,7 @@ import android.view.ViewGroup;
 
 import io.tylerchesley.android.sparkplugs.SparkPlugFragmentActivity;
 import io.tylerchesley.android.sparkplugs.plugins.ActivityLogPlugin;
-import io.tylerchesley.android.sparkplugs.plugins.SupportFragmentPlugin;
+import io.tylerchesley.android.sparkplugs.plugins.FragmentPlugin;
 
 /**
  * @author Tyler Chesley
@@ -44,7 +44,7 @@ public class SparkSampleActivity extends SparkPlugFragmentActivity {
     @Override
     protected void initializePlugins() {
         addActivityPlugin(new ActivityLogPlugin(TAG));
-        addActivityPlugin(SupportFragmentPlugin.newPlugin(SampleFragment.class).build());
+        addActivityPlugin(FragmentPlugin.from(SampleFragment.class));
     }
 
 //------------------------------------------

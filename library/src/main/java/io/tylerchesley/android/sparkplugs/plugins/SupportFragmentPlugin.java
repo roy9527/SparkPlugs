@@ -17,44 +17,23 @@
 package io.tylerchesley.android.sparkplugs.plugins;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 
-import io.tylerchesley.android.sparkplugs.R;
-import io.tylerchesley.android.sparkplugs.SparkPlugBase;
-import io.tylerchesley.android.sparkplugs.util.FragmentUtils;
+import java.security.InvalidParameterException;
+
 
 /**
  * @author Tyler Chesley (tylerchesley@gmail.com).
  */
-public class SupportFragmentPlugin<F extends Fragment> extends SparkPlugBase {
-
-//------------------------------------------
-//  Constants
-//------------------------------------------
-
-    public static final int INVALID_LAYOUT_RESOURCE_ID = -1;
-    public static final String SINGLE_FRAGMENT_TAG = "single_fragment";
-
-//------------------------------------------
-//  Static Methods
-//------------------------------------------
-
-    public static <B extends Fragment> Builder<B> newPlugin(Class<B> fragmentClass) {
-        return new Builder<B>(fragmentClass);
-    }
+class SupportFragmentPlugin<F extends Fragment> extends FragmentPlugin<F> {
 
 //------------------------------------------
 //  Variables
 //------------------------------------------
-
-    private final Class<F> mFragmentClass;
-    private final Bundle mArguments;
-    private final String mTag;
-    private final int mLayoutResourceId;
-    private final int mContainerId;
 
     private F mFragment;
 
@@ -64,105 +43,42 @@ public class SupportFragmentPlugin<F extends Fragment> extends SparkPlugBase {
 
     public SupportFragmentPlugin(Class<F> fragmentClass, Bundle arguments, String tag,
                           int layoutResourceId, int containerId) {
-        if (fragmentClass == null) {
-            throw new NullPointerException("Fragment class may not be null.");
-        }
-
-        mFragmentClass = fragmentClass;
-        mArguments = arguments;
-        mTag = tag;
-        mLayoutResourceId = layoutResourceId;
-        mContainerId = containerId;
-    }
-
-//------------------------------------------
-//  Overridden Methods
-//------------------------------------------
-
-    @Override
-    public void onCreate(Activity activity, Bundle savedInstanceState) {
-        if (!(activity instanceof FragmentActivity)) {
-            throw new IllegalArgumentException("Activity must be FragmentActivity");
-        }
-
-
-        if (mLayoutResourceId != INVALID_LAYOUT_RESOURCE_ID) {
-            activity.setContentView(mLayoutResourceId);
-        }
-
-        final FragmentActivity fragmentActivity = (FragmentActivity) activity;
-
-        mFragment = (F) fragmentActivity.getSupportFragmentManager().findFragmentByTag(mTag);
-
-        if (mFragment == null) {
-            mFragment = (F) Fragment.instantiate(activity,
-                    mFragmentClass.getName(), mArguments);
-            fragmentActivity.getSupportFragmentManager()
-                    .beginTransaction()
-                    .add(mContainerId, mFragment, mTag)
-                    .commit();
-        }
+        super(fragmentClass, arguments, tag, layoutResourceId, containerId);
     }
 
 //------------------------------------------
 //  Methods
 //------------------------------------------
 
-    public F getFragment() {
-        return mFragment;
+
+    @Override
+    protected void onCreateFragment(Activity activity, Class<F> fragmentClass, Bundle arguments,
+                                    String tag, int containerId) {
+        if (!(activity instanceof FragmentActivity)) {
+            throw new InvalidParameterException("Activity must be instance of FragmentActivity " +
+                    "to use support fragments.");
+        }
+
+        final FragmentActivity fragmentActivity = (FragmentActivity) activity;
+        final FragmentManager manager = fragmentActivity.getSupportFragmentManager();
+        mFragment = (F) manager.findFragmentByTag(tag);
+
+        if (mFragment == null) {
+            mFragment = (F) Fragment.instantiate(activity, fragmentClass.getName(), arguments);
+            final FragmentTransaction transaction = manager.beginTransaction();
+            if (containerId > 0) {
+                transaction.add(containerId, mFragment, tag);
+            }
+            else {
+                transaction.add(mFragment, tag);
+            }
+            transaction.commit();
+        }
+
     }
 
-//------------------------------------------
-//  Inner Classes
-//------------------------------------------
-
-    public static final class Builder<F extends Fragment> {
-
-        private final Class<F> mFragmentClass;
-
-        private Bundle mArguments;
-        private String mTag;
-        private int mLayoutResourceId = R.layout.activity_single_fragment_plugin;
-        private int mContainerId = R.id.single_fragment_container;
-
-        Builder(Class<F> fragmentClass) {
-            mFragmentClass = fragmentClass;
-        }
-
-        public Builder<F> arguments(Bundle arguments) {
-            mArguments = arguments;
-            return this;
-        }
-
-        public Builder arguments(Intent intent) {
-            return arguments(FragmentUtils.intentToFragmentArguments(intent));
-        }
-
-        public Builder<F> tag(String tag) {
-            mTag = tag;
-            return this;
-        }
-
-        public Builder<F> layoutResourceId(int layoutResourceId) {
-            mLayoutResourceId = layoutResourceId;
-            return this;
-        }
-
-        public Builder<F> containerId(int containerId) {
-            mContainerId = containerId;
-            return this;
-        }
-
-        public Builder<F> layoutAlreadySet() {
-            mLayoutResourceId = INVALID_LAYOUT_RESOURCE_ID;
-            return this;
-        }
-
-        public SupportFragmentPlugin<F> build() {
-            return new SupportFragmentPlugin<F>(mFragmentClass, mArguments, mTag,
-                    mLayoutResourceId, mContainerId);
-        }
-
+    public F getFragment() {
+        return mFragment;
     }
 
 }
