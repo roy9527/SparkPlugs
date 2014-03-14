@@ -17,13 +17,14 @@
 package io.tylerchesley.android.sparkplugs;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBarActivity;
 
 /**
  * Implementation of the {@link SparkPluginableActivity} interface for the
- * {@link android.support.v4.app.FragmentActivity} class.
+ * {@link android.support.v7.app.ActionBarActivity} class.
  */
-public class SparkPlugFragmentActivity extends FragmentActivity implements SparkPluginableActivity {
+public class SparkPlugActionBarActivity extends ActionBarActivity implements
+        SparkPluginableActivity {
 
 //------------------------------------------
 //  Variables
@@ -106,5 +107,6 @@ public class SparkPlugFragmentActivity extends FragmentActivity implements Spark
     protected void initializePlugins() {
 
     }
+
 
 }
